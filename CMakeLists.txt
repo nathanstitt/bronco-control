@@ -3,4 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(rotary_encoder)
+
+set(COMPONENTS main)
+
+project(bronco_control)

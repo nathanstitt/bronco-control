@@ -1,10 +1,29 @@
 dependencies:
+  espressif/esp-idf-cxx:
+    component_hash: 2fa63e4e725f0c2d3dd6d99da8a91d404b4b49667088b1be0f336eb9c13ff17f
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.0.2-beta
   idf:
     source:
       type: idf
     version: 5.3.1
+  m5stack/m5gfx:
+    component_hash: f46efc18351f7bad701603d3baeb3bd1187de41a5f1a471e76ff0a0a8f8e916d
+    dependencies: []
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 0.2.0
 direct_dependencies:
+- espressif/esp-idf-cxx
 - idf
-manifest_hash: 62d6bf737c7cc5427cf39e09f79654b0ee2ba261f4ec4d15be199ef50cdd1bc4
+- m5stack/m5gfx
+manifest_hash: 40c318d8a18a910998be29cf7c3f66497f2700412447429ef88bb2975c32ab87
 target: esp32s3
 version: 2.0.0
