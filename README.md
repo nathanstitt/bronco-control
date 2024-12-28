@@ -1,106 +1,34 @@
-| Supported Targets | ESP32 | ESP32-C6 | ESP32-H2 | ESP32-S2 | ESP32-S3 |
-| ----------------- | ----- | -------- | -------- | -------- | -------- |
+# Bronco II Controller
 
-# Rotary Encoder Example
+![bronco.png](images/bronco.png "1990 Bronco II")
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+This contains code to add push button start to a 1990 Ford Bronco II.  It runs on a [M5Dial](https://shop.m5stack.com/products/m5stack-dial-esp32-s3-smart-rotary-knob-w-1-28-round-touch-screen?srsltid=AfmBOopNiyRXYXNu6qZNPGmPNzxHJgsR5VEo9MoOiuh-Q4pTg5F6bXE1) connected to a circuit to measure engine RPM and control the ignition, starter and accessories.
 
-The PCNT peripheral is designed to count the number of rising and/or falling edges of an input signal. Each PCNT unit has two channels, which makes it possible to extract more information from two input signals than only one signal.
-This example shows how to make use of the HW features to decode the differential signals generated from a common rotary encoder -- [EC11](https://tech.alpsalpine.com/prod/e/html/encoder/incremental/ec11/ec11_list.html).
+In brief the code:
 
-The signals a rotary encoder produces (and what can be handled by this example) are based on a 2-bit gray code available on 2 digital data signal lines. The typical encoders use 3 output pins: 2 for the signals and one for the common signal usually GND.
+1) Senses when both the clutch and M5Dial button are pressed 
+1) activates the ignition circuit
+1) engages the starter
+1) watches engine RPM and disengages the starter once it reaches 400 RPM, or after 5 seconds maximum.
+1) when the engine is detected as running, the accessories (A/C, radio etc) are powered on.
+1) it then waits until the clutch and M5Dial button are both pressed for one second, and then deactivates the accessories and ignition
 
-Typical signals:
+## Circuit details
 
-```
-A      +-----+     +-----+     +-----+
-             |     |     |     |
-             |     |     |     |
-             +-----+     +-----+
-B         +-----+     +-----+     +-----+
-                |     |     |     |
-                |     |     |     |
-                +-----+     +-----+
+The original idea for the circuit was a [reddit post](https://www.reddit.com/r/AskElectronics/comments/pznd3f/working_on_building_a_digital_tach_for_my_car_but/) which had broken images, but then found the circuit [here](https://github.com/seanauff/classic-car-sensor-interface/issues/2)
 
- +--------------------------------------->
-                CW direction
-```
+![tach-circuit.png](images/tach-circuit.png "Tachometer Circuit")
 
-## How to Use Example
 
-### Hardware Required
+The circuit turns raw ignition pulses | into cleaned up square waveforms
+:-------------------------:|:-------------------------:
+| ![coil-pulses.png](images/coil-pulses.png "ingition pulses") | ![square-waveform.png](images/square-waveform.png "square waveform") |
 
-* An ESP development board
-* EC11 rotary encoder (or other encoders which can produce quadrature waveforms)
 
-Connection :
+However power consumption was a bit high at 120mA when the relays were added so I implemented deep sleep along with a master relay to only power the sensors once the ESP was awake.  That dropped parasitic draw to a more manageable 1.2mA
 
-```
-      +--------+              +---------------------------------+
-      |        |              |                                 |
-      |      A +--------------+ GPIO_A (internal pull up)       |
-      |        |              |                                 |
-+-------+      |              |                                 |
-|     | |  GND +--------------+ GND                             |
-+-------+      |              |                                 |
-      |        |              |                                 |
-      |      B +--------------+ GPIO_B (internal pull up)       |
-      |        |              |                                 |
-      +--------+              +---------------------------------+
-```
 
-The GPIO used by the example can be changed according to your board by `EXAMPLE_EC11_GPIO_A` and `EXAMPLE_EC11_GPIO_B` in [source file](main/rotary_encoder_example_main.c);
+## Future
 
-### Build and Flash
+Eventually I intend to connect the dial to the [carplay head unit](https://www.amazon.com/gp/product/B0CQJPXDWN) to control the volume.  I'd also like to connect to bluetooth and interface with the door locks, but that will likely incur an unacceptable high power draw.
 
-By configuring one of the EC11 GPIO (e.g. `EXAMPLE_EC11_GPIO_A`) as a wake up source, we can make the rotary encoder wake the system from light sleep. This example can illustrate this feature if you enable the `EXAMPLE_WAKE_UP_LIGHT_SLEEP` from the menuconfig.
-
-Run `idf.py -p PORT flash monitor` to build, flash and monitor the project.
-
-(To exit the serial monitor, type ``Ctrl-]``.)
-
-See the [Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) for full steps to configure and use ESP-IDF to build projects.
-
-## Example Output
-
-```
-I (0) cpu_start: Starting scheduler on APP CPU.
-I (325) example: install pcnt unit
-I (335) example: set glitch filter
-I (345) example: install pcnt channels
-I (395) example: set edge and level actions for pcnt channels
-I (405) example: add watch points and register callbacks
-I (405) example: clear pcnt unit
-I (415) example: start pcnt unit
-I (1415) example: Pulse count: 0
-I (2415) example: Pulse count: 8
-I (3415) example: Pulse count: 27
-I (4415) example: Pulse count: 40
-I (4705) example: Watch point event, count: 50
-I (5705) example: Pulse count: 72
-I (6705) example: Pulse count: 96
-I (6785) example: Watch point event, count: 100
-I (6785) example: Watch point event, count: 0
-I (7785) example: Pulse count: 8
-I (8785) example: Pulse count: 8
-I (9225) example: Watch point event, count: 0
-I (10225) example: Pulse count: -20
-I (11225) example: Pulse count: -28
-I (12225) example: Pulse count: -48
-I (12995) example: Watch point event, count: -50
-I (13995) example: Pulse count: -68
-I (14995) example: Pulse count: -82
-I (15995) example: Pulse count: -92
-I (16875) example: Watch point event, count: -100
-I (16875) example: Watch point event, count: 0
-I (17875) example: Pulse count: -12
-I (18875) example: Pulse count: -12
-I (19875) example: Pulse count: -12
-```
-
-This example enables the 4X mode to parse the rotary signals, which means, each complete rotary step will result in PCNT counter increasing or decreasing by 4, depending on the direction of rotation.
-The example adds five watch points, events will be triggered when counter reaches to any watch point.
-
-## Troubleshooting
-
-For any technical queries, please open an [issue] (https://github.com/espressif/esp-idf/issues) on GitHub. We will get back to you soon.
