@@ -2,6 +2,8 @@
 # in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.16)
 
+add_compile_options("-DLV_CONF_PATH=${CMAKE_SOURCE_DIR}/includes/lv_conf.h")
+
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
 set(COMPONENTS main)

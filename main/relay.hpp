@@ -1,7 +1,7 @@
 #pragma once
 
 #include "esp_err.h"
-//#include <i2c_cxx.hpp>
+#include <i2c_cxx.hpp>
 #include "../defines.h"
 //#include "driver/i2c.h"
 //#include <i2c_cxx.hpp>
@@ -13,5 +13,5 @@ public:
     esp_err_t set_state(bool state);
 
 private:
-  //  idf::I2CMaster *i2c;
+    idf::I2CMaster *i2c;
 };

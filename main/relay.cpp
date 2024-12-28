@@ -32,35 +32,46 @@ static const char *TAG = "RELAY";
 // #define I2C_MASTER_SDA_IO           idf::SDA_GPIO(CONFIG_I2C_MASTER_SDA)      /*!< GPIO number used for I2C master data  */
 
 Relay::Relay() {
-    i2c_port_t i2c_master_port = I2C_NUM_0;
+    // i2c_port_t i2c_master_port = I2C_NUM_0;
+    // i2c_config_t conf = {
+    //     .mode = I2C_MODE_MASTER,
+    //     .sda_io_num = 13,
+    //     .scl_io_num = 15,
+    //     .sda_pullup_en = GPIO_PULLUP_ENABLE,
+    //     .scl_pullup_en = GPIO_PULLUP_ENABLE,
+    //     .master = {
+    //         .clk_speed = I2C_MASTER_FREQ_HZ,
+    //     },
+    //     .clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
+    // };
+    // //conf.master.clk_speed = I2C_MASTER_FREQ_HZ;
 
-    i2c_config_t conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = 13,
-        .scl_io_num = 15,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master = {
-            .clk_speed = I2C_MASTER_FREQ_HZ,
-        },
-        .clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
-    };
-    //conf.master.clk_speed = I2C_MASTER_FREQ_HZ;
+    // i2c_param_config(i2c_master_port, &conf);
 
-    i2c_param_config(i2c_master_port, &conf);
-
-    ESP_ERROR_CHECK( i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0) );
-
-
-    uint8_t write_buf[1] = {0b10111110};
-    auto err = i2c_master_write_to_device(i2c_master_port, RELAY_I2C_ADDRESS, write_buf, sizeof(write_buf), I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to write to device: %s", esp_err_to_name(err));
-    }
+    // ESP_ERROR_CHECK( i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0) );
 
 
 
-    // i2c = new idf::I2CMaster(idf::I2CNumber::I2C0(), idf::SCL_GPIO(RELAY_SCL_GPIO_PIN), idf::SDA_GPIO(RELAY_SDA_GPIO_PIN), idf::Frequency(100000));
+    // uint8_t write_buf[1] = {0b10111110};
+    // auto err = i2c_master_write_to_device(i2c_master_port, RELAY_I2C_ADDRESS, write_buf, sizeof(write_buf), I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
+    // if (err != ESP_OK) {
+    //     ESP_LOGE(TAG, "Failed to write to device: %s", esp_err_to_name(err));
+    // }
+
+
+
+    i2c = new idf::I2CMaster(idf::I2CNumber::I2C0(),
+                             idf::SCL_GPIO(RELAY_SCL_GPIO_PIN),
+                             idf::SDA_GPIO(RELAY_SDA_GPIO_PIN),
+                             idf::Frequency(100000));
+
+    // i2c->release_bus();
+
+     // auto devAddr = idf::I2CAddress(RELAY_I2C_ADDRESS);
+     // std::vector<uint8_t> writeData = {0b10111110};
+     // i2c->sync_write(devAddr, writeData);
+
+
 
     // ESP_LOGI(TAG, "WHO_AM_I = %X", data[0]);
 
@@ -112,27 +123,45 @@ Relay::Relay() {
 
 esp_err_t
 Relay::set_state(bool state) {
-    uint8_t write_buf[1];//  = {0b10111110};
 
-    if (state) {
-        write_buf[0] = 0b10111111;
-        ESP_LOGI(TAG, "Turning relay ON");
-    } else {
-        write_buf[0] = 0;
-        ESP_LOGI(TAG, "Turning relay OFF");
-    }
+     auto devAddr = idf::I2CAddress(RELAY_I2C_ADDRESS);
+     std::vector<uint8_t> writeData ;
+     writeData.push_back(state ? 0b10111110 : 0);
 
-    auto err = i2c_master_write_to_device(I2C_NUM_0, RELAY_I2C_ADDRESS, write_buf, sizeof(write_buf), I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to write to device: %s", esp_err_to_name(err));
-    }
+     ESP_LOGI(TAG, "Turning relay %s", state ? "ON" : "OFF");
+
+     auto writeTx = std::make_shared<idf::I2CWrite>(writeData);
+
+     auto future = i2c->transfer(devAddr, writeTx);
+     future.get();
+
+     //i2c->sync_write(devAddr, writeData);
+
+    // uint8_t write_buf[1];//  = {0b10111110};
+
+    // if (state) {
+    //     write_buf[0] = 0b10111111;
+    //     ESP_LOGI(TAG, "Turning relay ON");
+    // } else {
+    //     write_buf[0] = 0;
+    //     ESP_LOGI(TAG, "Turning relay OFF");
+    // }
+
+    // auto err = i2c_master_write_to_device(I2C_NUM_0, RELAY_I2C_ADDRESS, write_buf, sizeof(write_buf), I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
+    // if (err != ESP_OK) {
+    //     ESP_LOGE(TAG, "Failed to write to device: %s", esp_err_to_name(err));
+    // }
 
 
-//     auto devAddr = idf::I2CAddress(RELAY_I2C_ADDRESS);
-//     std::vector<uint8_t> writeData = {0b10111110};
-// //    auto writeTx = std::make_shared<idf::I2CWrite>(writeData);
-// //    auto writeFuture =
-//         i2c->sync_write(devAddr, writeData);
+
+     // auto devAddr = idf::I2CAddress(RELAY_I2C_ADDRESS);
+     // std::vector<uint8_t> writeData = {0b10111110};
+     // auto writeTx = std::make_shared<idf::I2CWrite>(writeData);
+
+      // auto writeFuture = i2c->transfer(devAddr, writeTx);
+      // writeFuture.get();
+
+     //i2c->sync_write(devAddr, writeData);
 
 
 //    esp_err_t writeResult =

@@ -8,7 +8,8 @@
 #include "pin.hpp"
 #include "dial.hpp"
 #include "relay.hpp"
-#include <M5GFX.h>
+#include "display.hpp"
+//#include <M5GFX.h>
 
 class State
 {
@@ -17,9 +18,9 @@ public:
 
     void update();
 
-    M5GFX *display = new M5GFX();
-    M5Canvas *canvas = new M5Canvas(display);
-
+    //M5GFX *display = new M5GFX();
+//    M5Canvas *canvas = new M5Canvas(display);
+    Display *display = new Display();
     Engine *engine = new Engine();
     Dial *dial = new Dial();
     Relay *relay = new Relay();

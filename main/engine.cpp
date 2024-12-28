@@ -75,8 +75,14 @@ Engine::calc_rpm() {
 
     if (totalElapsed == 0) {
         last_rpm = 0;
+        return;
     }
-    last_rpm = (MICROSEC_PER_MINUTE / (totalElapsed / BUFFER_SIZE)) / PULSE_PER_REVOLUTION;
+    uint32_t avg = totalElapsed / BUFFER_SIZE;
+    ESP_LOGD(TAG, "avg = %ld", avg);
+    uint32_t per_min = (MICROSEC_PER_MINUTE / avg);
+    ESP_LOGD(TAG, "per min = %ld", per_min);
+
+    last_rpm = per_min / PULSE_PER_REVOLUTION;
 }
 
 // Debugging: Print the buffer values

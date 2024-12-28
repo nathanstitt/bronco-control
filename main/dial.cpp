@@ -19,6 +19,7 @@ Dial::Dial() {
     ESP_LOGI(TAG, "install pcnt unit");
     pcnt_unit_config_t unit_config;
     //unit_config.pulse_gpio_num = 2;
+    unit_config.intr_priority = 3;
 
     unit_config.low_limit = PCNT_LOW_LIMIT;
     unit_config.high_limit = PCNT_HIGH_LIMIT;
